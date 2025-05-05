@@ -1,22 +1,14 @@
-// --- Theme Switch ---
 const html = document.documentElement;
 const themeSwitch = document.getElementById('themeSwitch');
-
-function setTheme(theme) {
-    html.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-}
-function toggleTheme() {
+themeSwitch.addEventListener('click', () => {
     const current = html.getAttribute('data-theme') || 'dark';
-    setTheme(current === 'dark' ? 'light' : 'dark');
-}
-themeSwitch.addEventListener('click', toggleTheme);
-
+    html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+    localStorage.setItem('theme', html.getAttribute('data-theme'));
+});
 (function() {
     const saved = localStorage.getItem('theme');
-    setTheme(saved === 'light' ? 'light' : 'dark');
+    html.setAttribute('data-theme', saved === 'light' ? 'light' : 'dark');
 })();
-
 // ПОЛНЫЙ объект formulas:
 const formulas = {
     geometry: {
@@ -143,10 +135,58 @@ const formulas = {
     }
 };
 
+const classList = [
+    {num: 5, label: '5 класс'},
+    {num: 6, label: '6 класс'},
+    {num: 7, label: '7 класс'},
+    {num: 8, label: '8 класс'},
+    {num: 9, label: '9 класс'},
+    {num: 10, label: '10 класс'},
+    {num: 11, label: '11 класс'}
+];
 
+// --------- Sidebar ---------
+function renderSidebar(activeSubject, activeClass) {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.innerHTML = `<div class="sidebar-title">Классы</div><ul class="sidebar-classes" id="sidebarClasses"></ul>`;
+    const sidebarClasses = document.getElementById('sidebarClasses');
+    classList.forEach(cls => {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.className = 'sidebar-class-btn' + (activeClass == cls.num ? ' active' : '');
+        btn.textContent = cls.label;
+        btn.dataset.class = cls.num;
+        btn.addEventListener('click', () => {
+            showFormulas(activeSubject, String(cls.num));
+            document.querySelectorAll('.sidebar-class-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+        li.appendChild(btn);
+        sidebarClasses.appendChild(li);
+    });
+}
 
+// --------- Карточки классов ---------
+function renderClassCards(subject) {
+    const container = document.getElementById(subject + '-cards');
+    container.innerHTML = '';
+    classList.forEach(cls => {
+        const card = document.createElement('div');
+        card.className = 'class-card';
+        card.dataset.class = cls.num;
+        card.innerHTML = `<h2>${cls.label}</h2><p>Формулы и теоремы за ${cls.num} класс</p>`;
+        card.addEventListener('click', () => {
+            showFormulas(subject, String(cls.num));
+            document.querySelectorAll('.sidebar-class-btn').forEach(b => {
+                if (b.dataset.class == cls.num) b.classList.add('active');
+                else b.classList.remove('active');
+            });
+        });
+        container.appendChild(card);
+    });
+}
 
-// Навигация между разделами
+// --------- Навигация между разделами ---------
 document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', function(e) {
         e.preventDefault();
@@ -156,29 +196,199 @@ document.querySelectorAll('.nav-link').forEach(link => {
         document.querySelectorAll('.subject-section').forEach(sec => sec.classList.remove('active-section'));
         document.getElementById(section).classList.add('active-section');
         document.querySelectorAll('.formulas-container').forEach(fc => fc.classList.remove('active'));
+        if (section === 'fav') {
+            renderFav();
+            document.getElementById('fav-formulas').classList.add('active');
+        } else {
+            renderSidebar(section, null);
+            renderClassCards(section);
+        }
+        document.getElementById('formulaSearch').value = '';
+        filterFormulas('');
     });
 });
 
-// Показ формул по классу
-document.querySelectorAll('.class-card').forEach(card => {
-    card.addEventListener('click', function() {
-        const parentSection = card.closest('.subject-section');
-        const subject = parentSection.id;
-        const classNum = card.dataset.class;
-        const formulasBlock = parentSection.querySelector('.formulas-container');
-        formulasBlock.innerHTML = '';
-        if (formulas[subject] && formulas[subject][classNum]) {
-            const ul = document.createElement('ul');
-            ul.className = 'formula-list';
-            formulas[subject][classNum].forEach((f, idx) => {
-                const li = document.createElement('li');
-                li.style.animationDelay = (0.16 + idx * 0.08) + 's';
-                li.innerHTML = `<span class="formula-title">${f.title}</span><br>${f.text}`;
-                ul.appendChild(li);
-            });
-            formulasBlock.appendChild(ul);
-            formulasBlock.classList.add('active');
-            formulasBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+// --------- Поиск ---------
+const searchInput = document.getElementById('formulaSearch');
+const clearSearchBtn = document.getElementById('clearSearch');
+searchInput.addEventListener('input', () => filterFormulas(searchInput.value.trim()));
+clearSearchBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    filterFormulas('');
+    searchInput.focus();
+});
+function filterFormulas(query) {
+    query = query.toLowerCase();
+    let found = false;
+    document.querySelectorAll('.formulas-container.active .formula-list li').forEach(li => {
+        const txt = li.textContent.toLowerCase();
+        if (txt.includes(query)) {
+            li.style.display = '';
+            found = true;
+        } else {
+            li.style.display = 'none';
         }
     });
+    const container = document.querySelector('.formulas-container.active');
+    if (container) {
+        let nf = container.querySelector('.nothing-found');
+        if (!found && query) {
+            if (!nf) {
+                nf = document.createElement('div');
+                nf.className = 'nothing-found';
+                nf.innerHTML = "<br><b>Ничего не найдено...</b>";
+                container.appendChild(nf);
+            }
+        } else if (nf) {
+            nf.remove();
+        }
+    }
+}
+
+// --------- Показ формул по классу ---------
+function showFormulas(subject, classNum) {
+    document.querySelectorAll('.formulas-container').forEach(fc => fc.classList.remove('active'));
+    const formulasBlock = document.getElementById(subject + '-formulas');
+    formulasBlock.innerHTML = '';
+    if (formulas[subject] && formulas[subject][classNum]) {
+        const ul = document.createElement('ul');
+        ul.className = 'formula-list';
+        formulas[subject][classNum].forEach((f, idx) => {
+            const li = document.createElement('li');
+            li.style.animationDelay = (0.16 + idx * 0.08) + 's';
+            li.innerHTML = `<span class="formula-title">${f.title}</span><br>${f.text}`;
+            // Кнопка копирования
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'formula-copy';
+            copyBtn.title = 'Скопировать';
+            copyBtn.innerHTML = '⧉';
+            copyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                copyFormula(li);
+                copyBtn.classList.remove('fail','copied');
+            });
+            // Кнопка избранного
+            const favBtn = document.createElement('button');
+            favBtn.className = 'formula-fav';
+            favBtn.title = 'В избранное';
+            favBtn.innerHTML = '★';
+            if (isFaved(f.title, f.text)) favBtn.classList.add('faved');
+            favBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFav(f.title, f.text, favBtn);
+            });
+            li.appendChild(copyBtn);
+            li.appendChild(favBtn);
+            li.addEventListener('click', () => {
+                copyFormula(li);
+                copyBtn.classList.remove('fail','copied');
+            });
+            ul.appendChild(li);
+        });
+        formulasBlock.appendChild(ul);
+        formulasBlock.classList.add('active');
+        formulasBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    document.querySelectorAll('.sidebar-class-btn').forEach(b => {
+        if (b.dataset.class == classNum) b.classList.add('active');
+        else b.classList.remove('active');
+    });
+    document.getElementById('formulaSearch').value = '';
+    filterFormulas('');
+}
+
+// --------- Копирование формулы ---------
+function copyFormula(li) {
+    const text = li.innerText.replace('⧉','').replace('★','').trim();
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = li.querySelector('.formula-copy');
+        btn.classList.add('copied');
+        btn.innerText = '✓';
+        setTimeout(() => {
+            btn.classList.remove('copied');
+            btn.innerText = '⧉';
+        }, 1200);
+    }).catch(() => {
+        const btn = li.querySelector('.formula-copy');
+        btn.classList.add('fail');
+        btn.innerText = '!';
+        setTimeout(() => {
+            btn.classList.remove('fail');
+            btn.innerText = '⧉';
+        }, 1200);
+    });
+}
+
+// --------- Избранное ---------
+function getFav() {
+    try { return JSON.parse(localStorage.getItem('favFormulas')) || []; }
+    catch { return []; }
+}
+function saveFav(favArr) {
+    localStorage.setItem('favFormulas', JSON.stringify(favArr));
+}
+function isFaved(title, text) {
+    return getFav().some(f=>f.title===title && f.text===text);
+}
+function toggleFav(title, text, btn) {
+    let favArr = getFav();
+    const idx = favArr.findIndex(f=>f.title===title && f.text===text);
+    if (idx>-1) {
+        favArr.splice(idx,1);
+        btn.classList.remove('faved');
+    } else {
+        favArr.push({title, text});
+        btn.classList.add('faved');
+    }
+    saveFav(favArr);
+    if (document.querySelector('.nav-link.active').dataset.section==='fav') renderFav();
+}
+function renderFav() {
+    const favArr = getFav();
+    const block = document.getElementById('fav-formulas');
+    block.innerHTML = '';
+    if (!favArr.length) {
+        block.innerHTML = '<div style="text-align:center;color:var(--explain);font-size:1.1em">Нет избранных формул.<br>Добавьте их через ★</div>';
+        return;
+    }
+    const ul = document.createElement('ul');
+    ul.className = 'formula-list';
+    favArr.forEach((f, idx) => {
+        const li = document.createElement('li');
+        li.style.animationDelay = (0.16 + idx * 0.08) + 's';
+        li.innerHTML = `<span class="formula-title">${f.title}</span><br>${f.text}`;
+        // Кнопка копирования
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'formula-copy';
+        copyBtn.title = 'Скопировать';
+        copyBtn.innerHTML = '⧉';
+        copyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            copyFormula(li);
+            copyBtn.classList.remove('fail','copied');
+        });
+        // Кнопка избранного
+        const favBtn = document.createElement('button');
+        favBtn.className = 'formula-fav faved';
+        favBtn.title = 'Убрать из избранного';
+        favBtn.innerHTML = '★';
+        favBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleFav(f.title, f.text, favBtn);
+        });
+        li.appendChild(copyBtn);
+        li.appendChild(favBtn);
+        li.addEventListener('click', () => {
+            copyFormula(li);
+            copyBtn.classList.remove('fail','copied');
+        });
+        ul.appendChild(li);
+    });
+    block.appendChild(ul);
+}
+
+// --------- Инициализация ---------
+window.addEventListener('DOMContentLoaded', () => {
+    renderSidebar('geometry', null);
+    renderClassCards('geometry');
 });
