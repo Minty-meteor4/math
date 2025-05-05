@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Математика PRO</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">Математика <span>PRO</span></div>
+        <ul>
+            <li><a href="#" class="nav-link active" data-section="geometry">Геометрия</a></li>
+            <li><a href="#" class="nav-link" data-section="algebra">Алгебра</a></li>
+        </ul>
+        <div class="theme-switch" id="themeSwitch">
+            <span class="theme-switch-label">Тема</span>
+            <div class="theme-switch-slider">
+                <div class="theme-switch-dot"></div>
+            </div>
+        </div>
+    </nav>
+    <main>
+        <section id="geometry" class="subject-section active-section">
+            <h1>Геометрия</h1>
+            <div class="class-cards">
+                <div class="class-card" data-class="5"><h2>5 класс</h2><p>Периметры, площади простых фигур, понятие угла...</p></div>
+                <div class="class-card" data-class="6"><h2>6 класс</h2><p>Треугольники, параллелограммы, окружности...</p></div>
+                <div class="class-card" data-class="7"><h2>7 класс</h2><p>Равенство треугольников, признаки и свойства...</p></div>
+                <div class="class-card" data-class="8"><h2>8 класс</h2><p>Теорема Пифагора, круг, сектор, сегмент...</p></div>
+                <div class="class-card" data-class="9"><h2>9 класс</h2><p>Теоремы синусов и косинусов, вписанные углы...</p></div>
+                <div class="class-card" data-class="10"><h2>10 класс</h2><p>Призма, цилиндр, параллелепипед...</p></div>
+                <div class="class-card" data-class="11"><h2>11 класс</h2><p>Пирамида, шар, конус, усечённые фигуры...</p></div>
+            </div>
+            <div class="formulas-container"></div>
+        </section>
+        <section id="algebra" class="subject-section">
+            <h1>Алгебра</h1>
+            <div class="class-cards">
+                <div class="class-card" data-class="5"><h2>5 класс</h2><p>Действия с числами, свойства, порядок действий...</p></div>
+                <div class="class-card" data-class="6"><h2>6 класс</h2><p>Дроби, степени, деление дробей...</p></div>
+                <div class="class-card" data-class="7"><h2>7 класс</h2><p>Линейные уравнения, свойства степеней, пропорции...</p></div>
+                <div class="class-card" data-class="8"><h2>8 класс</h2><p>Квадратные уравнения, функции, прогрессии...</p></div>
+                <div class="class-card" data-class="9"><h2>9 класс</h2><p>Неравенства, системы, формулы сокращённого умножения...</p></div>
+                <div class="class-card" data-class="10"><h2>10 класс</h2><p>Логарифмы, показательные уравнения, прогрессии...</p></div>
+                <div class="class-card" data-class="11"><h2>11 класс</h2><p>Производная, интеграл, теоремы алгебры...</p></div>
+            </div>
+            <div class="formulas-container"></div>
+        </section>
+    </main>
+    <script src="script.js"></script>
+</body>
+</html>
